@@ -31,7 +31,7 @@ class App extends Component {
     emptyForm: { id: "", contactName: "", contactNumber: "" },
     buttonText: { text: "Guardar contacto" },
     editState: { text: "Guardar cambios" },
-    formSate: { mode: "save" }, //Condicional de estado que si el estado es edit cargue la funcion de edit y si esta en save mode que llame a save
+    formSate: { mode: "save" },
   };
 
   handleChange = (e) => {
@@ -44,7 +44,7 @@ class App extends Component {
   };
 
   formMode = (state, contactToEdit) => {
-    if (state === "save") {
+    if (state.mode == "save") {
       this.insertar();
     } else {
       this.editar(contactToEdit);
@@ -69,11 +69,10 @@ class App extends Component {
 
   editar = (contactToEdit) => {
     this.setState({ formMode: "Edit" });
-    const { id, contactName, contactNumber } = contactToEdit;
     let counter = 0;
     let list = this.state.contactos;
     list.map((contactEdit) => {
-      if (contactEdit.id === contactEdit.id) {
+      if (contactToEdit.id === contactEdit.id) {
         list[counter].contactName = contactToEdit.contactName;
         list[counter].contactNumber = contactToEdit.contactNumber;
       }
@@ -88,6 +87,17 @@ class App extends Component {
     });
   };
 
+  eliminar = (contactToDel) => {
+    let contactsList = this.state.contactos;
+    let counter = 0;
+    contactsList.map((contacto) => {
+      if (contacto.id == contactToDel.id) {
+        contactsList.splice(counter, 1);
+      }
+      counter++;
+    });
+    this.setState({ contactos: contactsList });
+  };
   render() {
     return (
       <div className="App">
@@ -143,7 +153,9 @@ class App extends Component {
               color="primary"
               size="lg"
               block
-              onClick={() => this.formMode(this.state.formSate)}
+              onClick={() =>
+                this.formMode(this.state.formSate, this.state.form)
+              }
             >
               {this.state.buttonText.text}
             </Button>
@@ -187,7 +199,15 @@ class App extends Component {
                       >
                         Editar
                       </Button>
-                      <Button color="danger"> Eliminar</Button>
+                      <Button
+                        color="danger"
+                        onClick={() => {
+                          this.eliminar(contacto);
+                        }}
+                      >
+                        {" "}
+                        Eliminar
+                      </Button>
                     </ButtonGroup>
                   </td>
                 </tr>
