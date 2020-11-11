@@ -1,6 +1,5 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaSearch } from "react-icons/fa";
 import {
   Table,
   Button,
@@ -18,7 +17,6 @@ const contacts = [
   { id: 3, contactName: "Jose", contactNumber: "8294486138" },
   { id: 4, contactName: "Junior", contactNumber: "8294486138" },
   { id: 5, contactName: "Josue", contactNumber: "8294486138" },
-  { id: 6, contactName: "Brandy", contactNumber: "8294486138" },
 ];
 class App extends Component {
   state = {
@@ -31,7 +29,8 @@ class App extends Component {
     emptyForm: { id: "", contactName: "", contactNumber: "" },
     buttonText: { text: "Guardar contacto" },
     editState: { text: "Guardar cambios" },
-    formSate: { mode: "save" },
+    formState: { mode: "" },
+    search: { word: "" },
   };
 
   handleChange = (e) => {
@@ -43,20 +42,49 @@ class App extends Component {
     });
   };
 
-  formMode = (state, contactToEdit) => {
-    if (state.mode == "save") {
-      this.insertar();
-    } else {
-      this.editar(contactToEdit);
+  search = () => {
+    if (this.state.search.word.length !== 1) {
+      const result = this.state.contactos.filter((contacts) =>
+        contacts.contactName
+          .toString()
+          .toLowerCase()
+          .includes(this.state.search.word.toLowerCase())
+      );
+      this.setState({ contactos: result });
+    } else if (this.state.search.word.length === 1) {
+      this.setState({ contactos: contacts });
     }
   };
+
+  formMode = (formMode, contactToEdit) => {
+    console.log(contactToEdit);
+    console.log(this.state.formState.mode);
+    const mode = this.state.formState.mode;
+    this.setState({
+      formState: {
+        mode: mode,
+      },
+    });
+    if (mode == "edit") {
+      this.editar(contactToEdit);
+    } else {
+      this.insertar();
+    }
+  };
+
   insertar = () => {
-    let newValue = { ...this.state.form };
-    newValue.id = this.state.contactos.length + 1;
-    let list = this.state.contactos;
-    list.push(newValue);
-    let initialState = this.state.emptyForm;
-    this.setState({ contactos: list, form: initialState });
+    if (this.state.form.contactName !== "" && this.state.form.contactNumber) {
+      let newValue = { ...this.state.form };
+      newValue.id = this.state.contactos.length + 1;
+      let list = this.state.contactos;
+      list.push(newValue);
+      let initialState = this.state.emptyForm;
+      this.setState({
+        contactos: list,
+        form: initialState,
+        formState: { mode: "" },
+      });
+    }
   };
 
   limpiar = () => {
@@ -64,26 +92,30 @@ class App extends Component {
     this.setState({
       form: initialState,
       buttonText: { text: "Guardar contacto" },
+      formState: { mode: "" },
     });
   };
 
   editar = (contactToEdit) => {
-    this.setState({ formMode: "Edit" });
+    this.setState({ formState: { mode: "edit" } });
     let counter = 0;
     let list = this.state.contactos;
-    list.map((contactEdit) => {
-      if (contactToEdit.id === contactEdit.id) {
-        list[counter].contactName = contactToEdit.contactName;
-        list[counter].contactNumber = contactToEdit.contactNumber;
-      }
-      counter++;
-    });
+    list.map(
+      (contactEdit) => {
+        if (contactToEdit.id === contactEdit.id) {
+          list[counter].contactName = contactToEdit.contactName;
+          list[counter].contactNumber = contactToEdit.contactNumber;
+        }
+        counter++;
+      },
+      console.log("Miodiendo alcance"),
+      this.setState({ form: this.state.emptyForm })
+    );
 
     this.setState({
       form: contactToEdit,
       contactos: list,
       buttonText: { text: "Guardar cambios" },
-      formMode: "save",
     });
   };
 
@@ -91,7 +123,7 @@ class App extends Component {
     let contactsList = this.state.contactos;
     let counter = 0;
     contactsList.map((contacto) => {
-      if (contacto.id == contactToDel.id) {
+      if (contacto.id === contactToDel.id) {
         contactsList.splice(counter, 1);
       }
       counter++;
@@ -119,7 +151,7 @@ class App extends Component {
                 </Col>
               </Form.Group>
 
-              <Form.Group as={Row} controlId="phoneNumber">
+              <Form.Group as={Row} controlId="contactNumber">
                 <Form.Label column sm="1">
                   Nombre
                 </Form.Label>
@@ -153,9 +185,9 @@ class App extends Component {
               color="primary"
               size="lg"
               block
-              onClick={() =>
-                this.formMode(this.state.formSate, this.state.form)
-              }
+              onClick={() => {
+                this.formMode("save", this.state.form);
+              }}
             >
               {this.state.buttonText.text}
             </Button>
@@ -168,14 +200,21 @@ class App extends Component {
               Limpiar
             </Button>
           </Form>
-          <Col xs="3" md={{ span: 3, offset: 5 }}>
-            <Form.Control type="text" placeholder="Buscar" />
+          <Col xs="3" md={{ span: 6, offset: 6 }}>
+            <Form.Label column sm="1"></Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Buscar"
+              name="word"
+              onChange={(e) => {
+                if (this.state.search.word !== undefined) {
+                  this.setState({ search: { word: e.target.value } });
+                  this.search(this.state.contactos);
+                }
+              }}
+            />
           </Col>
-          <Col md={{ span: 9, offset: 5 }}>
-            <Button>
-              <FaSearch />
-            </Button>
-          </Col>
+
           <Table>
             <thead>
               <th>Id</th>
@@ -205,7 +244,6 @@ class App extends Component {
                           this.eliminar(contacto);
                         }}
                       >
-                        {" "}
                         Eliminar
                       </Button>
                     </ButtonGroup>
